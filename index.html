@@ -65,7 +65,8 @@ gap: 14px;
 border: 1px solid transparent;
 transition: background 0.2s, border-color 0.2s;
 width: 100%;
-aspect-ratio: 6 / 1;
+aspect-ratio: 1090 / 180;
+border: none !important;
 }
 
 .btn-circle {
@@ -483,8 +484,8 @@ let _idleBars    = new Float32Array(76).fill(0).map((_,i) => 0.06 + Math.abs(Mat
 // ─────────────────────────────────────────────
 const BAR_COUNT = 75;
 const BAR_GAP   = 3.2;
-const EXPORT_W  = 1080;
-const EXPORT_H  = 170;
+const EXPORT_W  = 1090;
+const EXPORT_H  = 180;
 const DELAY_MS  = 1000;
 
 // ─────────────────────────────────────────────
@@ -1200,21 +1201,12 @@ btnExport.addEventListener('click', async () => {
   exportCvs.width=EXPORT_W; exportCvs.height=EXPORT_H;
 
   function drawExportFrame(ph,showPause){
-    const W=EXPORT_W,H=EXPORT_H,BORDER_R=44,PAD=0;
+    const W=EXPORT_W,H=EXPORT_H;
     const BTN_R=42;
     const BTN_CX=36+BTN_R,BTN_CY=H/2;
-    const WAVE_X=BTN_CX+BTN_R+24,WAVE_W=W-WAVE_X-36,WAVE_H=H;
+    const WAVE_X=BTN_CX+BTN_R+24,WAVE_W=W-WAVE_X-36;
 
-    ectx.clearRect(0,0,W,H);
-    ectx.beginPath();
-    ectx.moveTo(BORDER_R,0);ectx.lineTo(W-BORDER_R,0);ectx.quadraticCurveTo(W,0,W,BORDER_R);
-    ectx.lineTo(W,H-BORDER_R);ectx.quadraticCurveTo(W,H,W-BORDER_R,H);
-    ectx.lineTo(BORDER_R,H);ectx.quadraticCurveTo(0,H,0,H-BORDER_R);
-    ectx.lineTo(0,BORDER_R);ectx.quadraticCurveTo(0,0,BORDER_R,0);ectx.closePath();
-    ectx.save();
-    ectx.clip();
-
-    // fill pill background with solid color (colorPillBg is rgba, use colorBg as base)
+    // plain rectangle fill
     const [ebr,ebg,ebb]=hexToRgb(colorBg);
     const pillM=colorPillBg.match(/[\d.]+/g);
     let epr,epg,epb;
@@ -1223,13 +1215,7 @@ btnExport.addEventListener('click', async () => {
     ectx.fillStyle=`rgb(${epr},${epg},${epb})`;
     ectx.fillRect(0,0,W,H);
 
-    ectx.beginPath();
-    const hw=colorPillBorderWidth*1.5;
-    ectx.moveTo(BORDER_R,hw);ectx.lineTo(W-BORDER_R,hw);ectx.quadraticCurveTo(W-hw,hw,W-hw,BORDER_R);
-    ectx.lineTo(W-hw,H-BORDER_R);ectx.quadraticCurveTo(W-hw,H-hw,W-BORDER_R,H-hw);
-    ectx.lineTo(BORDER_R,H-hw);ectx.quadraticCurveTo(hw,H-hw,hw,H-BORDER_R);
-    ectx.lineTo(hw,BORDER_R);ectx.quadraticCurveTo(hw,hw,BORDER_R,hw);ectx.closePath();
-    ectx.strokeStyle=colorPillBorder;ectx.lineWidth=colorPillBorderWidth*3;ectx.stroke();
+    // icon
     ectx.fillStyle=colorIconColor;
     if(showPause){
       const bw=7,bh2=26,gap=10,bx=BTN_CX-gap/2-bw,by=BTN_CY-bh2/2;
@@ -1239,11 +1225,13 @@ btnExport.addEventListener('click', async () => {
       const sz=24;
       ectx.beginPath();ectx.moveTo(BTN_CX-sz*.45,BTN_CY-sz*.5);ectx.lineTo(BTN_CX+sz*.55,BTN_CY);ectx.lineTo(BTN_CX-sz*.45,BTN_CY+sz*.5);ectx.closePath();ectx.fill();
     }
+
+    // bars
     const barW=(WAVE_W-(BAR_COUNT-1)*BAR_GAP)/BAR_COUNT;
-    const maxBarH=H*.72,cy=H/2;
+    const maxBarH=H*.88,cy=H/2;
     const [r,g,b]=hexToRgb(colorBarBright);
     const [br2,bg3,bb2]=hexToRgb(colorBg);
-    const [pr2,pg2,pb2] = [Math.round(br2*0.93), Math.round(bg3*0.93), Math.round(bb2*0.93)]; // approx pill bg
+    const [pr2,pg2,pb2]=[Math.round(br2*0.93),Math.round(bg3*0.93),Math.round(bb2*0.93)];
     const dimR2=Math.round(r*0.35+pr2*0.65),dimG2=Math.round(g*0.35+pg2*0.65),dimB2=Math.round(b*0.35+pb2*0.65);
     for(let i=0;i<BAR_COUNT;i++){
       const bx=WAVE_X+i*(barW+BAR_GAP),amp=Math.max(finalBars[i]||0,0),bh=Math.max(amp*maxBarH,barW);
@@ -1255,7 +1243,6 @@ btnExport.addEventListener('click', async () => {
       ectx.lineTo(bx+rx,y0+bh);ectx.quadraticCurveTo(bx,y0+bh,bx,y0+bh-rx);
       ectx.lineTo(bx,y0+rx);ectx.quadraticCurveTo(bx,y0,bx+rx,y0);ectx.closePath();ectx.fill();
     }
-    ectx.restore();
   }
 
   const dest=actx.createMediaStreamDestination();
