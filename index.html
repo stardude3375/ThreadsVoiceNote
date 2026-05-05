@@ -427,23 +427,29 @@ transition: background 0.1s;
 
 <script>
 // ── iOS SILENT MODE BYPASS ──
-// Playing a silent audio element on first interaction forces iOS into
-// the 'playback' audio category, which ignores the silent switch.
+// Creating and resuming an AudioContext on first touch forces iOS to use
+// the playback audio session, which plays through silent mode.
 (function() {
-  const silentMp3 = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjU0AAAAAAAAAAAAAAAAJAAAAAAAAAAAAnHCNPgAAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
-  const audio = document.createElement('audio');
-  audio.src = silentMp3;
-  audio.loop = false;
-  audio.volume = 0.001;
-  audio.setAttribute('playsinline', '');
-  audio.setAttribute('webkit-playsinline', '');
+  let unlocked = false;
+  let ctx;
 
   function unlock() {
-    audio.play().catch(() => {});
+    if (unlocked) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // create and play a silent buffer
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    // resume in case it started suspended
+    if (ctx.state === 'suspended') ctx.resume();
+    unlocked = true;
     document.removeEventListener('touchstart', unlock, true);
     document.removeEventListener('touchend', unlock, true);
     document.removeEventListener('click', unlock, true);
   }
+
   document.addEventListener('touchstart', unlock, true);
   document.addEventListener('touchend', unlock, true);
   document.addEventListener('click', unlock, true);
@@ -1042,7 +1048,7 @@ async function startRecording() {
   isRecording = true;
   window._rawSamples = [];
   liveBuffer = new Float32Array(BAR_COUNT);
-  let liveMax = 0.01;
+  let liveMax = 0.001; // very low so first sound immediately fills height
   btnMain.className = 'btn-circle recording';
   setStatus('Recording…');
 
