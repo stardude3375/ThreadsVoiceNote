@@ -25,7 +25,7 @@ padding: 32px 16px 16px;
 
 /* ── CARD ── */
 .card {
-width: min(560px, 96vw);
+width: min(700px, 96vw);
 border-radius: 28px;
 padding: 22px 20px 18px;
 display: flex;
@@ -58,12 +58,14 @@ transition: opacity 0.15s;
 /* ── PILL ── */
 .pill {
 border-radius: 26px;
-padding: 14px 16px;
+padding: 0 16px;
 display: flex;
 align-items: center;
 gap: 14px;
 border: 1px solid transparent;
 transition: background 0.2s, border-color 0.2s;
+width: 100%;
+aspect-ratio: 6 / 1;
 }
 
 .btn-circle {
@@ -162,7 +164,7 @@ to   { opacity: 1; }
 
 /* ── COLOR PICKER BOX ── */
 .cp-box {
-width: min(560px, 96vw);
+width: min(700px, 96vw);
 border-radius: 20px;
 border: 1px solid rgba(128,128,128,0.18);
 overflow: hidden;
@@ -481,8 +483,8 @@ let _idleBars    = new Float32Array(76).fill(0).map((_,i) => 0.06 + Math.abs(Mat
 // ─────────────────────────────────────────────
 const BAR_COUNT = 75;
 const BAR_GAP   = 3.2;
-const EXPORT_W  = 1920;
-const EXPORT_H  = 220;
+const EXPORT_W  = 1080;
+const EXPORT_H  = 170;
 const DELAY_MS  = 1000;
 
 // ─────────────────────────────────────────────
@@ -937,11 +939,14 @@ themeBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 function sizeCanvas() {
   const dpr  = devicePixelRatio || 1;
-  const cssW = pill.clientWidth - 38 - 14 - 28;
+  const pillW = pill.clientWidth;
+  const pillH = pill.clientHeight;
+  const cssW = pillW - 38 - 14 - 28;
+  const cssH = pillH;
   canvas.width  = Math.max(cssW * dpr, 80);
-  canvas.height = 56 * dpr;
+  canvas.height = Math.max(cssH * dpr, 40);
   canvas.style.width  = Math.max(cssW, 80) + 'px';
-  canvas.style.height = '56px';
+  canvas.style.height = Math.max(cssH, 40) + 'px';
 }
 sizeCanvas();
 window.addEventListener('resize', () => {
