@@ -486,6 +486,7 @@ const BAR_COUNT = 75;
 const BAR_GAP   = 3.2;
 const EXPORT_W  = 1090;
 const EXPORT_H  = 180;
+const EXPORT_PAD = 500;
 const DELAY_MS  = 1000;
 
 // ─────────────────────────────────────────────
@@ -1198,13 +1199,18 @@ btnExport.addEventListener('click', async () => {
   const totalDurMs=DELAY_MS+audioDurMs+300;
   const stepMs=audioDurMs/BAR_COUNT;
 
-  exportCvs.width=EXPORT_W; exportCvs.height=EXPORT_H;
+  exportCvs.width=EXPORT_W+EXPORT_PAD*2; exportCvs.height=EXPORT_H+EXPORT_PAD*2;
 
   function drawExportFrame(ph,showPause){
     const W=EXPORT_W,H=EXPORT_H;
+    const CW=W+EXPORT_PAD*2,CH=H+EXPORT_PAD*2;
+    const OX=EXPORT_PAD,OY=EXPORT_PAD;
     const BTN_R=42;
-    const BTN_CX=36+BTN_R,BTN_CY=H/2;
-    const WAVE_X=BTN_CX+BTN_R+24,WAVE_W=W-WAVE_X-36;
+    const BTN_CX=OX+36+BTN_R,BTN_CY=OY+H/2;
+    const WAVE_X=BTN_CX+BTN_R+24,WAVE_W=OX+W-WAVE_X-36;
+
+    // clear to transparent
+    ectx.clearRect(0,0,CW,CH);
 
     // plain rectangle fill
     const [ebr,ebg,ebb]=hexToRgb(colorBg);
@@ -1213,7 +1219,7 @@ btnExport.addEventListener('click', async () => {
     if(pillM&&pillM.length>=4){const a=parseFloat(pillM[3]);epr=Math.round(parseInt(pillM[0])*a+ebr*(1-a));epg=Math.round(parseInt(pillM[1])*a+ebg*(1-a));epb=Math.round(parseInt(pillM[2])*a+ebb*(1-a));}
     else{[epr,epg,epb]=hexToRgb(colorPillBg);}
     ectx.fillStyle=`rgb(${epr},${epg},${epb})`;
-    ectx.fillRect(0,0,W,H);
+    ectx.fillRect(OX,OY,W,H);
 
     // icon
     ectx.fillStyle=colorIconColor;
@@ -1228,7 +1234,7 @@ btnExport.addEventListener('click', async () => {
 
     // bars
     const barW=(WAVE_W-(BAR_COUNT-1)*BAR_GAP)/BAR_COUNT;
-    const maxBarH=H*.88,cy=H/2;
+    const maxBarH=H*.88,cy=OY+H/2;
     const [r,g,b]=hexToRgb(colorBarBright);
     const [br2,bg3,bb2]=hexToRgb(colorBg);
     const [pr2,pg2,pb2]=[Math.round(br2*0.93),Math.round(bg3*0.93),Math.round(bb2*0.93)];
