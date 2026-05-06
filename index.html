@@ -1209,10 +1209,11 @@ btnExport.addEventListener('click', async () => {
     const BTN_CX=OX+36+BTN_R,BTN_CY=OY+H/2;
     const WAVE_X=BTN_CX+BTN_R+24,WAVE_W=OX+W-WAVE_X-36;
 
-    // clear to transparent
-    ectx.clearRect(0,0,CW,CH);
+    // fill entire canvas with bg color
+    ectx.fillStyle=colorBg;
+    ectx.fillRect(0,0,CW,CH);
 
-    // plain rectangle fill
+    // plain rectangle fill for pill area
     const [ebr,ebg,ebb]=hexToRgb(colorBg);
     const pillM=colorPillBg.match(/[\d.]+/g);
     let epr,epg,epb;
