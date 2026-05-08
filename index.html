@@ -25,7 +25,7 @@ padding: 32px 16px 16px;
 
 /* ── CARD ── */
 .card {
-width: min(700px, 96vw);
+width: min(2000px, 98vw);
 border-radius: 28px;
 padding: 22px 20px 18px;
 display: flex;
@@ -62,11 +62,10 @@ padding: 0 16px;
 display: flex;
 align-items: center;
 gap: 14px;
-border: 1px solid transparent;
-transition: background 0.2s, border-color 0.2s;
+border: none;
+transition: background 0.2s;
 width: 100%;
-aspect-ratio: 1090 / 180;
-border: none !important;
+aspect-ratio: 2000 / 200;
 }
 
 .btn-circle {
@@ -368,16 +367,11 @@ transition: background 0.1s;
 <div class="cp-box" id="cpBox">
   <div class="cp-tabs" id="cpTabs">
     <button class="cp-tab active" data-target="bg">Main</button>
-    <!-- wf and bo tabs injected dynamically when auto is off -->
   </div>
 
-  <!-- Auto checkboxes -->
+  <!-- Auto checkboxes — waveform only -->
 
   <div class="cp-auto-row">
-    <label class="cp-auto-label">
-      <input type="checkbox" id="chkAutoBorder" checked>
-      <span>Auto border</span>
-    </label>
     <label class="cp-auto-label">
       <input type="checkbox" id="chkAutoWave" checked>
       <span>Auto waveform</span>
@@ -410,16 +404,6 @@ transition: background 0.1s;
     <input class="rgb-input" id="bInput" type="number" min="0" max="255" placeholder="B">
   </div>
   <div class="preview-swatch" id="previewSwatch"></div>
-</div>
-
-<!-- Thickness slider — only visible on border tab -->
-<div class="sv-row" id="thicknessRow" style="display:none;">
-  <span class="sv-label" style="width:60px; opacity:0.45; font-size:11px;">Thickness</span>
-  <div class="sv-slider-wrap" id="thicknessSlider">
-    <div class="sv-slider-track" id="thicknessTrack"></div>
-    <div class="sv-thumb" id="thicknessThumb"></div>
-  </div>
-  <span id="thicknessVal" style="font-size:11px; opacity:0.5; width:24px; text-align:right; flex-shrink:0;">1px</span>
 </div>
 ```
 
@@ -484,9 +468,8 @@ let _idleBars    = new Float32Array(76).fill(0).map((_,i) => 0.06 + Math.abs(Mat
 // ─────────────────────────────────────────────
 const BAR_COUNT = 75;
 const BAR_GAP   = 3.2;
-const EXPORT_W  = 1090;
-const EXPORT_H  = 180;
-const EXPORT_PAD = 500;
+const EXPORT_W  = 2000;
+const EXPORT_H  = 200;
 const DELAY_MS  = 1000;
 
 // ─────────────────────────────────────────────
@@ -509,7 +492,7 @@ let colorPillBg    = '#2a2a2a';
 let colorBtnBg     = '#ffffff';
 let colorBtnFg     = '#1e1e1e';
 let colorIconColor = '#ffffff';
-let autoBorder     = true;
+let autoBorder     = false; // border removed
 let autoWave       = true;
 
 // ─────────────────────────────────────────────
@@ -764,18 +747,27 @@ function rebuildTabs() {
   }
 }
 
-document.getElementById('chkAutoBorder').addEventListener('change', e => {
-  autoBorder = e.target.checked;
-  if (autoBorder) {
-    // re-derive border from current bg
-    const derived = autoDerive(rgbToHex(...hsvToRgb(channels.bg.h, channels.bg.s, channels.bg.v)));
-    const [r,g,b] = hexToRgb(derived);
-    channels.bo = { ...rgbToHsv(r,g,b).reduce((o,v,i)=>({...o,[['h','s','v'][i]]:v}),{}) };
-    applyBo(derived);
-    applyBtn();
-  }
-  rebuildTabs();
-});
+function rebuildTabs() {
+  const tabBar = document.getElementById('cpTabs');
+  tabBar.innerHTML = '';
+  const tabs = [{ target: 'bg', label: 'Main' }];
+  if (!autoWave) tabs.push({ target: 'wf', label: 'Waveform' });
+
+  tabs.forEach(({ target, label }) => {
+    const btn = document.createElement('button');
+    btn.className = 'cp-tab' + (activeChannel === target ? ' active' : '');
+    btn.dataset.target = target;
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      activeChannel = target;
+      tabBar.querySelectorAll('.cp-tab').forEach(t => t.classList.toggle('active', t.dataset.target === activeChannel));
+      updateAllUI();
+    });
+    tabBar.appendChild(btn);
+  });
+
+  if (!tabs.find(t => t.target === activeChannel)) activeChannel = 'bg';
+}
 
 document.getElementById('chkAutoWave').addEventListener('change', e => {
   autoWave = e.target.checked;
@@ -788,8 +780,6 @@ document.getElementById('chkAutoWave').addEventListener('change', e => {
   rebuildTabs();
 });
 
-// tab switching — handled inside rebuildTabs now
-const thicknessRow = document.getElementById('thicknessRow');
 rebuildTabs();
 
 // drag helpers
@@ -804,24 +794,6 @@ function dragOn(el, onMove) {
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', end);
 }
-
-// thickness slider
-const MAX_BORDER = 8;
-function updateThicknessSlider() {
-  const pct = ((colorPillBorderWidth - 1) / (MAX_BORDER - 1)) * 100;
-  document.getElementById('thicknessThumb').style.left = pct + '%';
-  document.getElementById('thicknessTrack').style.background =
-    `linear-gradient(to right, ${colorPillBorder} ${pct}%, rgba(128,128,128,0.2) ${pct}%)`;
-  document.getElementById('thicknessVal').textContent = colorPillBorderWidth + 'px';
-}
-
-dragOn(document.getElementById('thicknessSlider'), e => {
-  const rect = document.getElementById('thicknessSlider').getBoundingClientRect();
-  const x = clamp(e.clientX - rect.left, 0, rect.width);
-  const w = Math.max(1, Math.round(1 + (x / rect.width) * (MAX_BORDER - 1)));
-  applyBorderWidth(w);
-  updateThicknessSlider();
-});
 
 // HSV square drag
 dragOn(hsvWrap, e => {
@@ -1199,28 +1171,22 @@ btnExport.addEventListener('click', async () => {
   const totalDurMs=DELAY_MS+audioDurMs+300;
   const stepMs=audioDurMs/BAR_COUNT;
 
-  exportCvs.width=EXPORT_W+EXPORT_PAD*2; exportCvs.height=EXPORT_H+EXPORT_PAD*2;
+  exportCvs.width=EXPORT_W; exportCvs.height=EXPORT_H;
 
   function drawExportFrame(ph,showPause){
     const W=EXPORT_W,H=EXPORT_H;
-    const CW=W+EXPORT_PAD*2,CH=H+EXPORT_PAD*2;
-    const OX=EXPORT_PAD,OY=EXPORT_PAD;
     const BTN_R=42;
-    const BTN_CX=OX+36+BTN_R,BTN_CY=OY+H/2;
-    const WAVE_X=BTN_CX+BTN_R+24,WAVE_W=OX+W-WAVE_X-36;
+    const BTN_CX=36+BTN_R,BTN_CY=H/2;
+    const WAVE_X=BTN_CX+BTN_R+24,WAVE_W=W-WAVE_X-36;
 
-    // fill entire canvas with bg color
-    ectx.fillStyle=colorBg;
-    ectx.fillRect(0,0,CW,CH);
-
-    // plain rectangle fill for pill area
+    // fill entire canvas with pill bg color
     const [ebr,ebg,ebb]=hexToRgb(colorBg);
     const pillM=colorPillBg.match(/[\d.]+/g);
     let epr,epg,epb;
     if(pillM&&pillM.length>=4){const a=parseFloat(pillM[3]);epr=Math.round(parseInt(pillM[0])*a+ebr*(1-a));epg=Math.round(parseInt(pillM[1])*a+ebg*(1-a));epb=Math.round(parseInt(pillM[2])*a+ebb*(1-a));}
     else{[epr,epg,epb]=hexToRgb(colorPillBg);}
     ectx.fillStyle=`rgb(${epr},${epg},${epb})`;
-    ectx.fillRect(OX,OY,W,H);
+    ectx.fillRect(0,0,W,H);
 
     // icon
     ectx.fillStyle=colorIconColor;
@@ -1235,7 +1201,7 @@ btnExport.addEventListener('click', async () => {
 
     // bars
     const barW=(WAVE_W-(BAR_COUNT-1)*BAR_GAP)/BAR_COUNT;
-    const maxBarH=H*.88,cy=OY+H/2;
+    const maxBarH=H*.88,cy=H/2;
     const [r,g,b]=hexToRgb(colorBarBright);
     const [br2,bg3,bb2]=hexToRgb(colorBg);
     const [pr2,pg2,pb2]=[Math.round(br2*0.93),Math.round(bg3*0.93),Math.round(bb2*0.93)];
