@@ -325,7 +325,27 @@ transition: background 0.1s;
 
 <div class="card" id="card">
   <div class="top-row">
-    <button class="btn-dev" id="btnDev">⚙ fake recording</button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-dev" id="btnDev">⚙ fake recording</button>
+      <button class="btn-dev" id="btnDims">⊞ set dimensions</button>
+    </div>
+  </div>
+
+  <!-- Dimensions modal -->
+
+  <div id="dimsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+    <div id="dimsBox" style="background:#1e1e1e; border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:14px; min-width:260px; color:#fff; font-family:inherit;">
+      <div style="font-size:14px; font-weight:600; opacity:0.8;">Video dimensions</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input id="dimW" type="number" value="2000" min="100" max="4000" style="width:80px; padding:8px; border-radius:8px; border:1px solid #444; background:#111; color:#fff; font-size:14px; text-align:center;">
+        <span style="opacity:0.5;">×</span>
+        <input id="dimH" type="number" value="200" min="50" max="2000" style="width:80px; padding:8px; border-radius:8px; border:1px solid #444; background:#111; color:#fff; font-size:14px; text-align:center;">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button id="dimCancel" style="flex:1; padding:8px; border-radius:10px; border:1px solid #444; background:transparent; color:#fff; cursor:pointer; font-family:inherit;">Cancel</button>
+        <button id="dimApply" style="flex:1; padding:8px; border-radius:10px; border:none; background:#fff; color:#000; cursor:pointer; font-family:inherit; font-weight:600;">Apply</button>
+      </div>
+    </div>
   </div>
 
   <div class="pill" id="pill">
@@ -468,8 +488,8 @@ let _idleBars    = new Float32Array(76).fill(0).map((_,i) => 0.06 + Math.abs(Mat
 // ─────────────────────────────────────────────
 const BAR_COUNT = 75;
 const BAR_GAP   = 3.2;
-const EXPORT_W  = 2000;
-const EXPORT_H  = 200;
+let EXPORT_W  = 2000;
+let EXPORT_H  = 200;
 const DELAY_MS  = 1000;
 
 // ─────────────────────────────────────────────
@@ -1168,7 +1188,7 @@ btnExport.addEventListener('click', async () => {
   catch(e){setStatus('Export failed');btnExport.textContent='Save video';btnExport.disabled=false;return;}
 
   const audioDurMs=Math.max(decoded.duration*1000,500);
-  const totalDurMs=DELAY_MS+audioDurMs+300;
+  const totalDurMs=DELAY_MS+audioDurMs;
   const stepMs=audioDurMs/BAR_COUNT;
 
   exportCvs.width=EXPORT_W; exportCvs.height=EXPORT_H;
@@ -1308,8 +1328,23 @@ btnClear.addEventListener('click',()=>{
   redraw();
 });
 
-// ─────────────────────────────────────────────
-// DEV: FAKE RECORDING
+// ── SET DIMENSIONS ──
+document.getElementById('btnDims').addEventListener('click', () => {
+  document.getElementById('dimW').value = EXPORT_W;
+  document.getElementById('dimH').value = EXPORT_H;
+  const modal = document.getElementById('dimsModal');
+  modal.style.display = 'flex';
+});
+document.getElementById('dimCancel').addEventListener('click', () => {
+  document.getElementById('dimsModal').style.display = 'none';
+});
+document.getElementById('dimApply').addEventListener('click', () => {
+  const w = Math.max(100, Math.min(4000, parseInt(document.getElementById('dimW').value) || 2000));
+  const h = Math.max(50,  Math.min(2000, parseInt(document.getElementById('dimH').value) || 200));
+  EXPORT_W = w;
+  EXPORT_H = h;
+  document.getElementById('dimsModal').style.display = 'none';
+});
 // ─────────────────────────────────────────────
 let fakeTicker = null;
 let fakeRawSamples = [];
