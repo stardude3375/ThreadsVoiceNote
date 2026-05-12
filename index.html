@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -8,346 +7,311 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-min-height: 100vh;
-height: 100vh;
-overflow: hidden;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: flex-start;
-gap: 12px;
-font-family: -apple-system, BlinkMacSystemFont, “SF Pro Text”, “Helvetica Neue”, sans-serif;
-background: Canvas;
-color-scheme: light dark;
-padding: 32px 16px 16px;
-}
+  body {
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    background: Canvas;
+    color-scheme: light dark;
+    padding: 32px 16px 16px;
+  }
 
-/* ── CARD ── */
-.card {
-width: min(2000px, 98vw);
-border-radius: 28px;
-padding: 22px 20px 18px;
-display: flex;
-flex-direction: column;
-gap: 14px;
-transition: background 0.2s;
-user-select: none;
--webkit-user-select: none;
-}
+  /* ── CARD ── */
+  .card {
+    width: min(2000px, 98vw);
+    border-radius: 28px;
+    padding: 22px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: background 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
 
-.top-row {
-display: flex;
-align-items: center;
-justify-content: flex-end;
-}
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
 
-.btn-dev {
-font-family: inherit;
-font-size: 10px;
-padding: 4px 10px;
-border-radius: 8px;
-border: 1px dashed rgba(128,128,128,0.4);
-background: transparent;
-cursor: pointer;
-opacity: 0.5;
-transition: opacity 0.15s;
-}
-.btn-dev:hover { opacity: 0.9; }
+  /* ── PILL ── */
+  .pill {
+    border-radius: 26px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: none;
+    transition: background 0.2s;
+    width: 100%;
+    aspect-ratio: 3 / 1;
+    overflow: hidden;
+  }
 
-/* ── PILL ── */
-.pill {
-border-radius: 26px;
-padding: 0 16px;
-display: flex;
-align-items: center;
-gap: 14px;
-border: none;
-transition: background 0.2s;
-width: 100%;
-aspect-ratio: 2000 / 200;
-overflow: hidden;
-}
+  .btn-circle {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    transition: transform 0.12s;
+  }
+  .btn-circle:active { transform: scale(0.91); }
 
-.btn-circle {
-width: 38px; height: 38px;
-border-radius: 50%;
-border: none;
-background: transparent;
-cursor: pointer;
-display: flex; align-items: center; justify-content: center;
-flex-shrink: 0;
-position: relative;
-transition: transform 0.12s;
-}
-.btn-circle:active { transform: scale(0.91); }
+  .icon-mic, .icon-stop, .icon-play, .icon-pause { position: absolute; transition: opacity 0.15s; }
+  .icon-stop  { opacity: 0; }
+  .icon-play  { opacity: 0; }
+  .icon-pause { opacity: 0; }
+  .btn-circle.recording .icon-mic  { opacity: 0; }
+  .btn-circle.recording .icon-stop { opacity: 1; }
+  .btn-circle.ready .icon-mic  { opacity: 0; }
+  .btn-circle.ready .icon-play { opacity: 1; }
+  .btn-circle.playing .icon-mic   { opacity: 0; }
+  .btn-circle.playing .icon-play  { opacity: 0; }
+  .btn-circle.playing .icon-pause { opacity: 1; }
 
-.icon-mic, .icon-stop, .icon-play, .icon-pause { position: absolute; transition: opacity 0.15s; }
-.icon-stop  { opacity: 0; }
-.icon-play  { opacity: 0; }
-.icon-pause { opacity: 0; }
-.btn-circle.recording .icon-mic  { opacity: 0; }
-.btn-circle.recording .icon-stop { opacity: 1; }
-.btn-circle.ready .icon-mic  { opacity: 0; }
-.btn-circle.ready .icon-play { opacity: 1; }
-.btn-circle.playing .icon-mic   { opacity: 0; }
-.btn-circle.playing .icon-play  { opacity: 0; }
-.btn-circle.playing .icon-pause { opacity: 1; }
+  #waveCanvas { flex: 1; height: 48px; display: block; min-width: 0; }
 
-#waveCanvas { flex: 1; height: 48px; display: block; min-width: 0; }
+  .status { display: none; } /* kept for JS compat but hidden */
 
-.status { display: none; } /* kept for JS compat but hidden */
+  .pill-status {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0.35;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .pill-status.hidden { opacity: 0; }
 
-.pill-status {
-position: absolute;
-inset: 0;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 12px;
-opacity: 0.35;
-pointer-events: none;
-transition: opacity 0.2s;
-}
-.pill-status.hidden { opacity: 0; }
+  /* ── BOTTOM ROW ── */
+  .bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    gap: 8px;
+  }
+  .actions { display: flex; gap: 8px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .actions.visible { opacity: 1; pointer-events: all; }
+  .btn-action {
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 12px; border: none;
+    cursor: pointer; transition: opacity 0.15s, background 0.2s, color 0.2s;
+  }
+  .btn-action:active { opacity: 0.6; }
 
-/* ── BOTTOM ROW ── */
-.bottom-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-min-height: 36px;
-gap: 8px;
-}
-.actions { display: flex; gap: 8px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-.actions.visible { opacity: 1; pointer-events: all; }
-.btn-action {
-font-family: inherit; font-size: 12px; font-weight: 500;
-padding: 6px 14px; border-radius: 12px; border: none;
-cursor: pointer; transition: opacity 0.15s, background 0.2s, color 0.2s;
-}
-.btn-action:active { opacity: 0.6; }
+  .btn-theme-toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid rgba(128,128,128,0.25);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.12s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .btn-theme-toggle:active { transform: scale(0.91); }
+  /* hold progress ring drawn via outline animation */
+  .btn-theme-toggle::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 11px;
+    border: 2px solid transparent;
+    transition: border-color 0.1s;
+  }
+  .btn-theme-toggle.holding::after {
+    border-color: rgba(128,128,128,0.6);
+    animation: hold-pulse 4s linear forwards;
+  }
+  @keyframes hold-pulse {
+    from { opacity: 0.3; }
+    to   { opacity: 1; }
+  }
 
-.btn-theme-toggle {
-width: 28px;
-height: 28px;
-border-radius: 8px;
-border: 2px solid rgba(128,128,128,0.25);
-cursor: pointer;
-flex-shrink: 0;
-transition: background 0.2s, transform 0.12s;
-position: relative;
-overflow: hidden;
-user-select: none;
--webkit-user-select: none;
--webkit-touch-callout: none;
-}
-.btn-theme-toggle:active { transform: scale(0.91); }
-/* hold progress ring drawn via outline animation */
-.btn-theme-toggle::after {
-content: ‘’;
-position: absolute;
-inset: -3px;
-border-radius: 11px;
-border: 2px solid transparent;
-transition: border-color 0.1s;
-}
-.btn-theme-toggle.holding::after {
-border-color: rgba(128,128,128,0.6);
-animation: hold-pulse 4s linear forwards;
-}
-@keyframes hold-pulse {
-from { opacity: 0.3; }
-to   { opacity: 1; }
-}
+  #exportCanvas { display: none; }
 
-#exportCanvas { display: none; }
+  /* ── COLOR PICKER BOX ── */
+  .cp-box {
+    width: min(700px, 96vw);
+    border-radius: 20px;
+    border: 1px solid rgba(128,128,128,0.18);
+    overflow: hidden;
+    transition: background 0.2s, border-color 0.2s;
+    display: none;
+  }
+  .cp-box.open { display: block; }
 
-/* ── COLOR PICKER BOX ── */
-.cp-box {
-width: min(700px, 96vw);
-border-radius: 20px;
-border: 1px solid rgba(128,128,128,0.18);
-overflow: hidden;
-transition: background 0.2s, border-color 0.2s;
-display: none;
-}
-.cp-box.open { display: block; }
+  /* BG / WF / BO tabs */
+  .cp-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(128,128,128,0.13);
+  }
+  .cp-tab {
+    flex: 1; padding: 12px 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-align: center; cursor: pointer;
+    opacity: 0.32; transition: opacity 0.15s;
+    border: none; background: transparent; font-family: inherit;
+  }
+  .cp-tab.active { opacity: 1; }
 
-/* BG / WF / BO tabs */
-.cp-tabs {
-display: flex;
-border-bottom: 1px solid rgba(128,128,128,0.13);
-}
-.cp-tab {
-flex: 1; padding: 12px 6px;
-font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
-text-align: center; cursor: pointer;
-opacity: 0.32; transition: opacity 0.15s;
-border: none; background: transparent; font-family: inherit;
-}
-.cp-tab.active { opacity: 1; }
+  .cp-body { padding: 16px; display: flex; flex-direction: column; gap: 13px; }
 
-.cp-body { padding: 16px; display: flex; flex-direction: column; gap: 13px; }
+  /* HSV gradient square */
+  .hsv-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 46%; /* aspect ratio ~2:1 */
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: crosshair;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  #hsvCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hsv-cursor {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.45);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
 
-/* HSV gradient square */
-.hsv-wrap {
-position: relative;
-width: 100%;
-padding-bottom: 46%; /* aspect ratio ~2:1 */
-border-radius: 10px;
-overflow: hidden;
-cursor: crosshair;
-flex-shrink: 0;
-user-select: none;
-}
-#hsvCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hsv-cursor {
-position: absolute;
-width: 14px; height: 14px;
-border-radius: 50%;
-border: 2px solid #fff;
-box-shadow: 0 0 0 1.5px rgba(0,0,0,0.45);
-transform: translate(-50%, -50%);
-pointer-events: none;
-}
+  /* Hue slider */
+  .hue-slider-wrap {
+    position: relative;
+    height: 24px;
+    cursor: pointer;
+  }
+  .hue-slider-track {
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%; transform: translateY(-50%);
+    height: 12px;
+    border-radius: 6px;
+    pointer-events: none;
+    background: linear-gradient(to right,
+      hsl(0,100%,50%), hsl(30,100%,50%), hsl(60,100%,50%), hsl(90,100%,50%),
+      hsl(120,100%,50%), hsl(150,100%,50%), hsl(180,100%,50%), hsl(210,100%,50%),
+      hsl(240,100%,50%), hsl(270,100%,50%), hsl(300,100%,50%), hsl(330,100%,50%), hsl(360,100%,50%));
+  }
+  .hue-thumb {
+    position: absolute;
+    top: 50%; transform: translate(-50%, -50%);
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(0,0,0,0.2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    pointer-events: none;
+    z-index: 2;
+  }
 
-/* Hue slider */
-.hue-slider-wrap {
-position: relative;
-height: 24px;
-cursor: pointer;
-}
-.hue-slider-track {
-position: absolute;
-left: 0; right: 0;
-top: 50%; transform: translateY(-50%);
-height: 12px;
-border-radius: 6px;
-pointer-events: none;
-background: linear-gradient(to right,
-hsl(0,100%,50%), hsl(30,100%,50%), hsl(60,100%,50%), hsl(90,100%,50%),
-hsl(120,100%,50%), hsl(150,100%,50%), hsl(180,100%,50%), hsl(210,100%,50%),
-hsl(240,100%,50%), hsl(270,100%,50%), hsl(300,100%,50%), hsl(330,100%,50%), hsl(360,100%,50%));
-}
-.hue-thumb {
-position: absolute;
-top: 50%; transform: translate(-50%, -50%);
-width: 20px; height: 20px;
-border-radius: 50%;
-background: #fff;
-border: 2px solid rgba(0,0,0,0.2);
-box-shadow: 0 1px 4px rgba(0,0,0,0.35);
-pointer-events: none;
-z-index: 2;
-}
+  /* S and V sliders */
+  .sv-row { display: flex; gap: 10px; align-items: center; }
+  .sv-label { font-size: 10px; opacity: 0.45; width: 10px; flex-shrink: 0; text-align: center; }
+  .sv-slider-wrap {
+    flex: 1; height: 24px; cursor: pointer; position: relative;
+  }
+  .sv-slider-track {
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%; transform: translateY(-50%);
+    height: 12px;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .sv-thumb {
+    position: absolute;
+    top: 50%; transform: translate(-50%, -50%);
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(0,0,0,0.2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .cp-auto-row {
+    display: flex;
+    gap: 20px;
+    padding: 10px 16px 2px;
+    border-bottom: 1px solid rgba(128,128,128,0.13);
+  }
+  .cp-auto-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    opacity: 0.7;
+    cursor: pointer;
+    user-select: none;
+  }
+  .cp-auto-label input[type="checkbox"] {
+    width: 14px; height: 14px;
+    cursor: pointer;
+    accent-color: currentColor;
+  }
 
-/* S and V sliders */
-.sv-row { display: flex; gap: 10px; align-items: center; }
-.sv-label { font-size: 10px; opacity: 0.45; width: 10px; flex-shrink: 0; text-align: center; }
-.sv-slider-wrap {
-flex: 1; height: 24px; cursor: pointer; position: relative;
-}
-.sv-slider-track {
-position: absolute;
-left: 0; right: 0;
-top: 50%; transform: translateY(-50%);
-height: 12px;
-border-radius: 6px;
-pointer-events: none;
-}
-.sv-thumb {
-position: absolute;
-top: 50%; transform: translate(-50%, -50%);
-width: 20px; height: 20px;
-border-radius: 50%;
-background: #fff;
-border: 2px solid rgba(0,0,0,0.2);
-box-shadow: 0 1px 4px rgba(0,0,0,0.35);
-pointer-events: none;
-z-index: 2;
-}
-.cp-auto-row {
-display: flex;
-gap: 20px;
-padding: 10px 16px 2px;
-border-bottom: 1px solid rgba(128,128,128,0.13);
-}
-.cp-auto-label {
-display: flex;
-align-items: center;
-gap: 7px;
-font-size: 12px;
-opacity: 0.7;
-cursor: pointer;
-user-select: none;
-}
-.cp-auto-label input[type=“checkbox”] {
-width: 14px; height: 14px;
-cursor: pointer;
-accent-color: currentColor;
-}
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .hex-wrap { display: flex; align-items: center; gap: 5px; flex: 1.5; }
+  .hex-label { font-size: 11px; opacity: 0.45; flex-shrink: 0; }
+  .hex-input {
+    flex: 1; font-size: 12px; font-family: monospace;
+    padding: 6px 8px; border-radius: 8px;
+    border: 1px solid rgba(128,128,128,0.22);
+    background: rgba(128,128,128,0.09);
+    color: inherit; outline: none; width: 0;
+  }
+  .rgb-wrap { display: flex; gap: 5px; flex: 2; }
+  .rgb-input {
+    flex: 1; font-size: 12px; text-align: center;
+    padding: 6px 3px; border-radius: 8px;
+    border: 1px solid rgba(128,128,128,0.22);
+    background: rgba(128,128,128,0.09);
+    color: inherit; outline: none; width: 0; min-width: 0;
+  }
 
-.input-row {
-display: flex;
-gap: 8px;
-align-items: center;
-}
-.hex-wrap { display: flex; align-items: center; gap: 5px; flex: 1.5; }
-.hex-label { font-size: 11px; opacity: 0.45; flex-shrink: 0; }
-.hex-input {
-flex: 1; font-size: 12px; font-family: monospace;
-padding: 6px 8px; border-radius: 8px;
-border: 1px solid rgba(128,128,128,0.22);
-background: rgba(128,128,128,0.09);
-color: inherit; outline: none; width: 0;
-}
-.rgb-wrap { display: flex; gap: 5px; flex: 2; }
-.rgb-input {
-flex: 1; font-size: 12px; text-align: center;
-padding: 6px 3px; border-radius: 8px;
-border: 1px solid rgba(128,128,128,0.22);
-background: rgba(128,128,128,0.09);
-color: inherit; outline: none; width: 0; min-width: 0;
-}
-
-/* preview swatch */
-.preview-swatch {
-width: 36px; height: 36px;
-border-radius: 9px;
-border: 1px solid rgba(128,128,128,0.2);
-flex-shrink: 0;
-transition: background 0.1s;
-}
+  /* preview swatch */
+  .preview-swatch {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    border: 1px solid rgba(128,128,128,0.2);
+    flex-shrink: 0;
+    transition: background 0.1s;
+  }
 </style>
-
 </head>
 <body>
 
 <div class="card" id="card">
-  <div class="top-row">
-    <div style="display:flex; gap:8px;">
-      <button class="btn-dev" id="btnDev">⚙ fake recording</button>
-      <button class="btn-dev" id="btnDims">⊞ set dimensions</button>
-    </div>
-  </div>
 
-  <!-- Dimensions modal -->
 
-  <div id="dimsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
-    <div id="dimsBox" style="background:#1e1e1e; border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:14px; min-width:260px; color:#fff; font-family:inherit;">
-      <div style="font-size:14px; font-weight:600; opacity:0.8;">Video dimensions</div>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <input id="dimW" type="number" value="2000" min="100" max="4000" style="width:80px; padding:8px; border-radius:8px; border:1px solid #444; background:#111; color:#fff; font-size:14px; text-align:center;">
-        <span style="opacity:0.5;">×</span>
-        <input id="dimH" type="number" value="200" min="50" max="2000" style="width:80px; padding:8px; border-radius:8px; border:1px solid #444; background:#111; color:#fff; font-size:14px; text-align:center;">
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button id="dimCancel" style="flex:1; padding:8px; border-radius:10px; border:1px solid #444; background:transparent; color:#fff; cursor:pointer; font-family:inherit;">Cancel</button>
-        <button id="dimApply" style="flex:1; padding:8px; border-radius:10px; border:none; background:#fff; color:#000; cursor:pointer; font-family:inherit; font-weight:600;">Apply</button>
-      </div>
-    </div>
-  </div>
 
   <div class="pill" id="pill">
     <button class="btn-circle" id="btnMain">
@@ -384,14 +348,12 @@ transition: background 0.1s;
 </div>
 
 <!-- COLOR PICKER — always visible below card -->
-
 <div class="cp-box" id="cpBox">
   <div class="cp-tabs" id="cpTabs">
     <button class="cp-tab active" data-target="bg">Main</button>
   </div>
 
   <!-- Auto checkboxes — waveform only -->
-
   <div class="cp-auto-row">
     <label class="cp-auto-label">
       <input type="checkbox" id="chkAutoWave" checked>
@@ -406,27 +368,25 @@ transition: background 0.1s;
       <div class="hsv-cursor" id="hsvCursor"></div>
     </div>
 
-```
-<!-- Hue slider -->
-<div class="hue-slider-wrap" id="hueSlider">
-  <div class="hue-slider-track"></div>
-  <div class="hue-thumb" id="hueThumb"></div>
-</div>
+    <!-- Hue slider -->
+    <div class="hue-slider-wrap" id="hueSlider">
+      <div class="hue-slider-track"></div>
+      <div class="hue-thumb" id="hueThumb"></div>
+    </div>
 
-<!-- Hex + RGB + preview -->
-<div class="input-row">
-  <div class="hex-wrap">
-    <span class="hex-label">Hex</span>
-    <input class="hex-input" id="hexInput" maxlength="7" spellcheck="false">
-  </div>
-  <div class="rgb-wrap">
-    <input class="rgb-input" id="rInput" type="number" min="0" max="255" placeholder="R">
-    <input class="rgb-input" id="gInput" type="number" min="0" max="255" placeholder="G">
-    <input class="rgb-input" id="bInput" type="number" min="0" max="255" placeholder="B">
-  </div>
-  <div class="preview-swatch" id="previewSwatch"></div>
-</div>
-```
+    <!-- Hex + RGB + preview -->
+    <div class="input-row">
+      <div class="hex-wrap">
+        <span class="hex-label">Hex</span>
+        <input class="hex-input" id="hexInput" maxlength="7" spellcheck="false">
+      </div>
+      <div class="rgb-wrap">
+        <input class="rgb-input" id="rInput" type="number" min="0" max="255" placeholder="R">
+        <input class="rgb-input" id="gInput" type="number" min="0" max="255" placeholder="G">
+        <input class="rgb-input" id="bInput" type="number" min="0" max="255" placeholder="B">
+      </div>
+      <div class="preview-swatch" id="previewSwatch"></div>
+    </div>
 
   </div>
 </div>
@@ -489,8 +449,8 @@ let _idleBars    = new Float32Array(76).fill(0).map((_,i) => 0.06 + Math.abs(Mat
 // ─────────────────────────────────────────────
 const BAR_COUNT = 75;
 const BAR_GAP   = 3.2;
-let EXPORT_W  = 2000;
-let EXPORT_H  = 200;
+let EXPORT_W  = 900;
+let EXPORT_H  = 300;
 const DELAY_MS  = 1000;
 
 // ─────────────────────────────────────────────
@@ -652,8 +612,6 @@ function applyBtn() {
   btnExp.style.background = colorPillBorder;
   btnExp.style.color = colorBg;
   btnExp.style.border = 'none';
-
-  document.getElementById('btnDev').style.color = textColor;
 }
 
 // Theme applied via applyThemePreset(0) below
@@ -1329,102 +1287,6 @@ btnClear.addEventListener('click',()=>{
   redraw();
 });
 
-// ── SET DIMENSIONS ──
-document.getElementById('btnDims').addEventListener('click', () => {
-  document.getElementById('dimW').value = EXPORT_W;
-  document.getElementById('dimH').value = EXPORT_H;
-  const modal = document.getElementById('dimsModal');
-  modal.style.display = 'flex';
-});
-document.getElementById('dimCancel').addEventListener('click', () => {
-  document.getElementById('dimsModal').style.display = 'none';
-});
-document.getElementById('dimApply').addEventListener('click', () => {
-  const w = Math.max(100, Math.min(4000, parseInt(document.getElementById('dimW').value) || 2000));
-  const h = Math.max(50,  Math.min(2000, parseInt(document.getElementById('dimH').value) || 200));
-  EXPORT_W = w;
-  EXPORT_H = h;
-  document.getElementById('dimsModal').style.display = 'none';
-});
-// ─────────────────────────────────────────────
-let fakeTicker = null;
-let fakeRawSamples = [];
-
-async function stopFakeRecording() {
-  if (fakeTicker) { clearInterval(fakeTicker); fakeTicker = null; }
-  isRecording = false;
-  btnMain.className = 'btn-circle';
-  setStatus('Processing…');
-
-  // build final bars from collected raw samples
-  const raw = fakeRawSamples;
-  if (raw.length === 0) { setStatus('Tap to record'); return; }
-
-  finalBars = new Float32Array(BAR_COUNT);
-  const step = raw.length / BAR_COUNT;
-  let maxAmp = 0;
-  for (let b = 0; b < BAR_COUNT; b++) {
-    const s = Math.floor(b * step), e = Math.min(Math.ceil((b+1)*step), raw.length);
-    let acc = 0; for (let j = s; j < e; j++) acc += raw[j];
-    finalBars[b] = e > s ? acc/(e-s) : 0;
-    if (finalBars[b] > maxAmp) maxAmp = finalBars[b];
-  }
-  if (maxAmp > 0) for (let b = 0; b < BAR_COUNT; b++) finalBars[b] /= maxAmp;
-
-  playhead = -1;
-  drawBars(finalBars, playhead, ctx, canvas.width, canvas.height);
-
-  // build a silent audio blob of matching duration
-  const dur = Math.max(fakeRawSamples.length / 60, 0.5); // ~60 samples/sec
-  const sr = 44100;
-  const offCtx = new OfflineAudioContext(1, Math.floor(sr*dur), sr);
-  const sb = offCtx.createBuffer(1, Math.floor(sr*dur), sr);
-  const ch2 = sb.getChannelData(0);
-  for (let s2 = 0; s2 < ch2.length; s2++) ch2[s2] = (Math.random()-.5)*.01;
-  const ss = offCtx.createBufferSource(); ss.buffer = sb; ss.connect(offCtx.destination); ss.start();
-  const rendered = await offCtx.startRendering();
-  recordedBlob = new Blob([audioBufferToWav(rendered)], { type: 'audio/wav' });
-  const tmpCtx = new AudioContext();
-  audioBuffer = await tmpCtx.decodeAudioData(await recordedBlob.arrayBuffer()).catch(() => rendered);
-
-  btnMain.className = 'btn-circle ready';
-  setStatus('Tap to play');
-  actions.classList.add('visible');
-}
-
-document.getElementById('btnDev').addEventListener('click', () => {
-  if (isPlaying) return;
-
-  // if already fake-recording, stop it
-  if (isRecording && fakeTicker) {
-    stopFakeRecording();
-    return;
-  }
-
-  finalBars = null; recordedBlob = null; audioBuffer = null; playhead = -1;
-  fakeRawSamples = [];
-  actions.classList.remove('visible');
-
-  isRecording = true;
-  btnMain.className = 'btn-circle recording';
-  setStatus('Recording…');
-
-  const scrollBuf = new Float32Array(BAR_COUNT);
-  let val = 0.3;
-
-  fakeTicker = setInterval(() => {
-    // generate next sample with smooth random walk
-    val += (Math.random() - 0.45) * 0.12;
-    val = Math.max(0.04, Math.min(1, val));
-    fakeRawSamples.push(val);
-
-    // scroll left, push new on right
-    for (let b = 0; b < BAR_COUNT - 1; b++) scrollBuf[b] = scrollBuf[b+1];
-    scrollBuf[BAR_COUNT-1] = val;
-    drawBars(scrollBuf, BAR_COUNT - 1, ctx, canvas.width, canvas.height);
-  }, 50); // ~20 samples/sec, smooth scroll
-});
-
 function audioBufferToWav(buffer){
   const samples=buffer.getChannelData(0),len=samples.length,ab=new ArrayBuffer(44+len*2),view=new DataView(ab),sr=buffer.sampleRate;
   function ws(o,s){for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i));}
@@ -1436,6 +1298,5 @@ function audioBufferToWav(buffer){
   return ab;
 }
 </script>
-
 </body>
 </html>
